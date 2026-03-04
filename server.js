@@ -10,6 +10,8 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 const applicationRoutes = require('./routes/applicationRoutes');
+const certificateRoutes = require('./routes/certificateRoutes');
+
 
 dotenv.config();
 
@@ -17,7 +19,7 @@ const app = express();
 
 // CORS
 app.use(cors({
-  origin: "https://gv-f.vercel.app",
+ origin: ['http://localhost:5173', 'https://gv-f.vercel.app'],
   credentials: true 
 }));
 
@@ -81,7 +83,7 @@ app.get('/', (req, res) => {
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('✅ MongoDB Connected Successfully'))
     .catch((err) => console.error('❌ MongoDB Connection Error:', err));
-
+  
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/courses', require('./routes/courseRoutes'));
@@ -91,6 +93,7 @@ app.use('/api/attendance', require('./routes/attendanceRoutes'));
 app.use('/api/fees', require('./routes/feeRoutes'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/applications', applicationRoutes);
+app.use('/api/certificates',certificateRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Error:', err);
