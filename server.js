@@ -16,7 +16,10 @@ dotenv.config();
 const app = express();
 
 // CORS
-app.use(cors());
+app.use(cors({
+  origin: "https://gv-f.vercel.app",
+  credentials: true 
+}));
 
 // Body parsers
 app.use(express.json());
