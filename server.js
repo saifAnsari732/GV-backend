@@ -17,7 +17,7 @@ const app = express();
 
 // CORS
 app.use(cors({
- origin: ['https://gv-f.vercel.app'],
+ origin: ['https://gv-f.vercel.app',"http://localhost:5173"],
   credentials: true 
 }));
 
