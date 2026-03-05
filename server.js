@@ -1,5 +1,3 @@
-// ALTERNATIVE SOLUTION: Using Multer instead of express-fileupload
-// Install multer: npm install multer
 
 const express = require('express');
 const mongoose = require('mongoose');
@@ -19,7 +17,7 @@ const app = express();
 
 // CORS
 app.use(cors({
- origin: ['http://localhost:5173', 'https://gv-f.vercel.app'],
+ origin: ['https://gv-f.vercel.app'],
   credentials: true 
 }));
 
@@ -80,9 +78,13 @@ app.get('/', (req, res) => {
 });
 
 // Database Connection
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('✅ MongoDB Connected Successfully'))
-    .catch((err) => console.error('❌ MongoDB Connection Error:', err));
+async function connect(){
+ await mongoose.connect(process.env.MONGODB_URI)
+  console.log(" ✅ MongoDB Connected Successfully");
+}
+connect();
+    // .then(() => console.log('✅ MongoDB Connected Successfully'))
+    // .catch((err) => console.error('❌ MongoDB Connection Error:', err));
   
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
@@ -121,11 +123,8 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log(`\n${'='.repeat(50)}`);
     console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📁 Upload: MULTER (temp: /tmp/uploads/)`);
-    console.log(`☁️  Cloudinary: CONFIGURED`);
-    console.log(`${'='.repeat(50)}\n`);
+
 });
 
 module.exports = app;
