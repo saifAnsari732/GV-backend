@@ -126,7 +126,7 @@ exports.createCourse = async (req, res) => {
       fees: req.body.fees,
       category: req.body.category || 'Other',
       syllabus: [],
-      courseImage:req.file.courseImage
+      courseImage:''
     };
 
     // Parse syllabus if it's a string
