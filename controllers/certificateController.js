@@ -131,15 +131,21 @@ const verifyCertificate = async (req, res) => {
 // @access  Admin
 const updateCertificate = async (req, res) => {
   try {
-    const certificate = await Certificate.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    const certificate = await Certificate.findById(req.params.id);
 
     if (!certificate) {
       return res.status(404).json({ success: false, message: 'Certificate not found' });
     }
+
+    // Update fields using Object.assign
+    Object.assign(certificate, req.body);
+    
+    // Explicitly mark marksheet as modified if updated to force re-calculation
+    if (req.body.marksheet) {
+      certificate.markModified('marksheet');
+    }
+
+    await certificate.save();
 
     res.json({ success: true, message: 'Certificate updated', data: certificate });
   } catch (error) {
