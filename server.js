@@ -17,7 +17,13 @@ const app = express();
 
 // CORS
 app.use(cors({
- origin: ['https://gv-f.vercel.app', 'http://localhost:5173', 'http://localhost:3000'],
+ origin: [
+   'https://gv-f.vercel.app', 
+   'https://gvcomputer.in', 
+   'https://www.gvcomputer.in', 
+   'http://localhost:5173', 
+   'http://localhost:3000'
+ ],
   credentials: true 
 }));
 
