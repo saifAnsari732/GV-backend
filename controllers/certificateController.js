@@ -113,6 +113,7 @@ const verifyCertificate = async (req, res) => {
       success: true,
       message: 'Certificate is valid',
       data: {
+        _id: certificate._id,
         certificateNumber: certificate.certificateNumber,
         studentName: certificate.studentName,
         courseName: certificate.courseName,
