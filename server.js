@@ -12,12 +12,12 @@ const certificateRoutes = require('./routes/certificateRoutes');
 
 
 dotenv.config();
-
+ 
 const app = express();
 
 // CORS
 app.use(cors({
- origin: ['https://gv-f.vercel.app',"http://localhost:5173"],
+ origin: ['https://gv-f.vercel.app', 'http://localhost:5173', 'http://localhost:3000'],
   credentials: true 
 }));
 
