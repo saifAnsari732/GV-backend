@@ -100,6 +100,23 @@ exports.register = async (req, res) => {
       courseNames: enrolledCourses
     });
 
+    // Automatically create Fee records for the enrolled courses
+    if (courses && courses.length > 0) {
+      const Fee = require('../models/Fee');
+      for (const course of courses) {
+        await Fee.create({
+          student: user._id,
+          course: course._id,
+          totalFees: course.fees || 0,
+          paidAmount: 0,
+          pendingAmount: course.fees || 0,
+          status: 'pending',
+          payments: [],
+          paymentRequests: []
+        });
+      }
+    }
+
     // Populate course details for response
     const populatedUser = await User.findById(user._id).populate('courseNames.course', 'courseName courseCode fees');
 
