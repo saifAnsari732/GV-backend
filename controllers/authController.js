@@ -68,6 +68,25 @@ exports.register = async (req, res) => {
       }
     }
 
+    let profileImageUrl = 'default-avatar.jpg';
+    if (req.file) {
+      const cloudinary = require('cloudinary').v2;
+      const fs = require('fs');
+      try {
+        const result = await cloudinary.uploader.upload(req.file.path, {
+          folder: 'profile_images',
+          width: 400,
+          height: 400,
+          crop: 'fill',
+          gravity: 'face'
+        });
+        profileImageUrl = result.secure_url;
+        try { fs.unlinkSync(req.file.path); } catch(e) {}
+      } catch (err) {
+        console.error("Cloudinary upload failed during register:", err);
+      }
+    }
+
     // Create user with enrolled courses
     const user = await User.create({
       name,
@@ -77,7 +96,7 @@ exports.register = async (req, res) => {
       address,
       dateOfBirth,
       role: role || 'student',
-      profileImage: req.file ? req.file.filename : 'default-avatar.jpg',
+      profileImage: profileImageUrl,
       courseNames: enrolledCourses
     });
 
