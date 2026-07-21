@@ -9,6 +9,7 @@ const {
   getFeeStatistics,
   createFeeRecord,
   submitPaymentRequest,
+  submitPaymentRequestByCourse,
   approvePaymentRequest,
   rejectPaymentRequest,
   getPendingPaymentRequests
@@ -38,6 +39,7 @@ router.get('/payment-requests', protect, adminOnly, getPendingPaymentRequests);
 router.get('/student/:studentId', protect, getStudentFees);
 router.get('/:id', protect, getFeeRecord);
 router.post('/:id/payment', protect, adminOnly, addPayment);
+router.post('/course/:courseId/payment-request', protect, uploadScreenshot.single('screenshot'), submitPaymentRequestByCourse);
 router.post('/:id/payment-request', protect, uploadScreenshot.single('screenshot'), submitPaymentRequest);
 router.put('/:id/payment-request/:reqId/approve', protect, adminOnly, approvePaymentRequest);
 router.put('/:id/payment-request/:reqId/reject', protect, adminOnly, rejectPaymentRequest);

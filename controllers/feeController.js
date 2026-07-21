@@ -265,6 +265,61 @@ exports.createFeeRecord = async (req, res) => {
   }
 };
 
+// @desc    Student submits payment request using Course ID (Finds or Creates Fee Record)
+// @route   POST /api/fees/course/:courseId/payment-request
+// @access  Private (Student)
+exports.submitPaymentRequestByCourse = async (req, res) => {
+  try {
+    const { amount, transactionId } = req.body;
+    const courseId = req.params.courseId;
+    const studentId = req.user.id;
+    
+    if (!req.file) return res.status(400).json({ success: false, message: 'Payment screenshot is required' });
+
+    // Find Fee record
+    let fee = await Fee.findOne({ student: studentId, course: courseId });
+    
+    // If no fee record, create one
+    if (!fee) {
+      const Course = require('../models/Course');
+      const course = await Course.findById(courseId);
+      if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
+      
+      fee = await Fee.create({
+        student: studentId,
+        course: courseId,
+        totalFees: course.fees || 0,
+        paidAmount: 0,
+        pendingAmount: course.fees || 0,
+        status: 'pending',
+        payments: [],
+        paymentRequests: []
+      });
+    }
+
+    // Upload screenshot to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'payment_screenshots',
+      resource_type: 'image'
+    });
+    // Delete local temp file
+    try { fs.unlinkSync(req.file.path); } catch(e) {}
+
+    fee.paymentRequests.push({
+      amount: Number(amount),
+      screenshotUrl: result.secure_url,
+      transactionId,
+      status: 'pending',
+      submittedAt: new Date()
+    });
+    await fee.save();
+
+    res.status(201).json({ success: true, message: 'Payment request submitted successfully! Admin will verify and update your record.', data: fee });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Student submits payment screenshot request
 // @route   POST /api/fees/:id/payment-request
 // @access  Private (Student)
