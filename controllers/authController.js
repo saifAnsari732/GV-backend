@@ -48,12 +48,13 @@ exports.register = async (req, res) => {
 
     // Process enrolled courses if courseIdentifier is provided
     let enrolledCourses = [];
+    let courses = [];
     if (courseIdentifier) {
       const courseIdArray = Array.isArray(courseIdentifier) ? courseIdentifier : [courseIdentifier];
       console.log("Course ID array:", courseIdArray);
       
       // Find courses by IDs
-      const courses = await Course.find({
+      courses = await Course.find({
         _id: { $in: courseIdArray }
       });
 
