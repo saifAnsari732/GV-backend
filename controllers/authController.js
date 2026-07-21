@@ -228,3 +228,34 @@ exports.updateProfile = async (req, res) => {
     });
   }
 };
+
+// @desc    Upload profile image only
+// @route   PUT /api/auth/profile/image
+// @access  Private
+exports.updateProfileImage = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: 'No image file provided' });
+
+    const cloudinary = require('cloudinary').v2;
+    const fs = require('fs');
+
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'profile_images',
+      width: 400,
+      height: 400,
+      crop: 'fill',
+      gravity: 'face'
+    });
+    try { fs.unlinkSync(req.file.path); } catch(e) {}
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { profileImage: result.secure_url },
+      { new: true }
+    ).select('-password');
+
+    res.status(200).json({ success: true, message: 'Profile image updated!', data: user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

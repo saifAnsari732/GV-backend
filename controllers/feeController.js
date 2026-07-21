@@ -1,4 +1,6 @@
 const Fee = require('../models/Fee');
+const cloudinary = require('cloudinary').v2;
+const fs = require('fs');
 
 // @desc    Get all fee records
 // @route   GET /api/fees
@@ -260,5 +262,131 @@ exports.createFeeRecord = async (req, res) => {
       success: false,
       message: error.message
     });
+  }
+};
+
+// @desc    Student submits payment screenshot request
+// @route   POST /api/fees/:id/payment-request
+// @access  Private (Student)
+exports.submitPaymentRequest = async (req, res) => {
+  try {
+    const { amount, transactionId } = req.body;
+    const fee = await Fee.findById(req.params.id);
+    if (!fee) return res.status(404).json({ success: false, message: 'Fee record not found' });
+
+    if (!req.file) return res.status(400).json({ success: false, message: 'Payment screenshot is required' });
+
+    // Upload screenshot to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'payment_screenshots',
+      resource_type: 'image'
+    });
+    // Delete local temp file
+    try { fs.unlinkSync(req.file.path); } catch(e) {}
+
+    fee.paymentRequests.push({
+      amount: Number(amount),
+      screenshotUrl: result.secure_url,
+      transactionId,
+      status: 'pending',
+      submittedAt: new Date()
+    });
+    await fee.save();
+
+    res.status(201).json({ success: true, message: 'Payment request submitted successfully! Admin will verify and update your record.', data: fee });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Admin approves payment request
+// @route   PUT /api/fees/:id/payment-request/:reqId/approve
+// @access  Private/Admin
+exports.approvePaymentRequest = async (req, res) => {
+  try {
+    const fee = await Fee.findById(req.params.id);
+    if (!fee) return res.status(404).json({ success: false, message: 'Fee record not found' });
+
+    const payReq = fee.paymentRequests.id(req.params.reqId);
+    if (!payReq) return res.status(404).json({ success: false, message: 'Payment request not found' });
+    if (payReq.status !== 'pending') return res.status(400).json({ success: false, message: 'Request already processed' });
+
+    // Approve: add to official payments
+    fee.payments.push({
+      amount: payReq.amount,
+      paymentMode: 'UPI',
+      transactionId: payReq.transactionId,
+      remarks: `QR Payment - Screenshot verified. TxnID: ${payReq.transactionId || 'N/A'}`
+    });
+    fee.paidAmount += payReq.amount;
+
+    // Mark request as approved
+    payReq.status = 'approved';
+    payReq.adminNote = req.body.adminNote || 'Payment verified and approved';
+    payReq.reviewedAt = new Date();
+
+    await fee.save();
+    res.status(200).json({ success: true, message: 'Payment approved successfully', data: fee });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Admin rejects payment request
+// @route   PUT /api/fees/:id/payment-request/:reqId/reject
+// @access  Private/Admin
+exports.rejectPaymentRequest = async (req, res) => {
+  try {
+    const fee = await Fee.findById(req.params.id);
+    if (!fee) return res.status(404).json({ success: false, message: 'Fee record not found' });
+
+    const payReq = fee.paymentRequests.id(req.params.reqId);
+    if (!payReq) return res.status(404).json({ success: false, message: 'Payment request not found' });
+    if (payReq.status !== 'pending') return res.status(400).json({ success: false, message: 'Request already processed' });
+
+    payReq.status = 'rejected';
+    payReq.adminNote = req.body.adminNote || 'Payment rejected';
+    payReq.reviewedAt = new Date();
+    await fee.save();
+
+    res.status(200).json({ success: true, message: 'Payment request rejected', data: fee });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Admin gets all pending payment requests
+// @route   GET /api/fees/payment-requests
+// @access  Private/Admin
+exports.getPendingPaymentRequests = async (req, res) => {
+  try {
+    const fees = await Fee.find({ 'paymentRequests.status': 'pending' })
+      .populate('student', 'name email phone')
+      .populate('course', 'courseName courseCode')
+      .sort({ updatedAt: -1 });
+
+    // Flatten to just pending requests with fee context
+    const requests = [];
+    fees.forEach(fee => {
+      fee.paymentRequests.filter(r => r.status === 'pending').forEach(req => {
+        requests.push({
+          feeId: fee._id,
+          requestId: req._id,
+          student: fee.student,
+          course: fee.course,
+          amount: req.amount,
+          screenshotUrl: req.screenshotUrl,
+          transactionId: req.transactionId,
+          submittedAt: req.submittedAt,
+          totalFees: fee.totalFees,
+          paidAmount: fee.paidAmount,
+          pendingAmount: fee.pendingAmount
+        });
+      });
+    });
+
+    res.status(200).json({ success: true, count: requests.length, data: requests });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

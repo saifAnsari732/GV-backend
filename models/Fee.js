@@ -40,6 +40,28 @@ const feeSchema = new mongoose.Schema({
     transactionId: String,
     remarks: String,
   }],
+  paymentRequests: [{
+    amount: {
+      type: Number,
+      required: true
+    },
+    screenshotUrl: {
+      type: String,
+      required: true
+    },
+    transactionId: String,
+    submittedAt: {
+      type: Date,
+      default: Date.now
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending'
+    },
+    adminNote: String,
+    reviewedAt: Date
+  }],
   status: {
     type: String,
     enum: ['pending', 'partial', 'paid'],
