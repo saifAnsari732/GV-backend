@@ -45,9 +45,10 @@ exports.getStudentFees = async (req, res) => {
     console.log("Found fees:", fees); // Debug log
     
     if (!fees || fees.length === 0) {
-      return res.status(404).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'No fee records found for this student',
+        count: 0,
         data: []
       });
     }
