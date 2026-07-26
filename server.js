@@ -9,6 +9,7 @@ const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 const applicationRoutes = require('./routes/applicationRoutes');
 const certificateRoutes = require('./routes/certificateRoutes');
+const enquiryRoutes = require('./routes/enquiryRoutes');
 
 
 dotenv.config();
@@ -101,7 +102,8 @@ app.use('/api/attendance', require('./routes/attendanceRoutes'));
 app.use('/api/fees', require('./routes/feeRoutes'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/applications', applicationRoutes);
-app.use('/api/certificates',certificateRoutes);
+app.use('/api/certificates', certificateRoutes);
+app.use('/api/enquiries', enquiryRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Error:', err);
