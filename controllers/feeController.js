@@ -40,7 +40,7 @@ exports.getStudentFees = async (req, res) => {
     // const fees = await Fee.findById(req.params.studentId)
     
     // CORRECT: find searches by any field, here we want student field
-    const fees = await Fee.find({ student: req.params.studentId });
+    const fees = await Fee.find({ student: req.params.studentId }).populate('course', 'courseName courseCode');
     
     console.log("Found fees:", fees); // Debug log
     
